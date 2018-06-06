@@ -41,8 +41,8 @@ A range in the buffer for a correct or incorrect word. This is an array of two n
 Property                 | Type                                   | Default     | Description
 ------------------------ | -------------------------------------- | ----------- | -----------
 invertIncorrectAsCorrect | `boolean | undefined`                  | `false`     | If true, assume everything no in the `incorrect` range is correct.
-incorrect                | `ISpellCheckBufferRange[] | undefined` | `undefined`
-correct                  | `ISpellCheckBufferRange[] | undefined` | `undefined`
+incorrect                | `ISpellCheckBufferRange[] \| undefined` | `undefined`
+correct                  | `ISpellCheckBufferRange[] \| undefined` | `undefined`
 
 A correct word range is always considered correct even if other checkers indicate it is incorrect.
 
