@@ -121,6 +121,14 @@ module.exports =
         @instance?.addCheckerPath checkerPath
         @globalArgs.checkerPaths.push checkerPath
 
+  # Registers any Atom packages that listen to our spell-check status.
+  consumeSpellCheckStatus: (statuses) ->
+    # Normalize it so we always have an array.
+    unless statuses instanceof Array
+      statuses = [ checkerPaths ]
+
+    console.log "Got status plugins" + checkerPaths.join(", ")
+
   misspellingMarkersForEditor: (editor) ->
     @viewsByEditor.get(editor).markerLayer.getMarkers()
 

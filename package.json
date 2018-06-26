@@ -104,6 +104,11 @@
       "versions": {
         "^1.0.0": "consumeSpellCheckers"
       }
+    },
+    "spell-check-status": {
+      "versions": {
+        "^1.0.0": "consumeSpellCheckStatus"
+      }
     }
   }
 }

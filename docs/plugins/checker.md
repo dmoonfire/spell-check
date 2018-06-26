@@ -1,6 +1,6 @@
 # Checker Plugins
 
-The `spell-check` allows for additional dictionaries to be used at the same time using Atom's `providedServices` element in the `package.json` file.
+The `spell-check` package allows for additional dictionaries to be used at the same time using Atom's `providedServices` element in the `package.json` file.
 
     "providedServices": {
       "spell-check": {
