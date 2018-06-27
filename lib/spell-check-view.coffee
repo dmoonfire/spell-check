@@ -83,6 +83,20 @@ class SpellCheckView
     @initializeMarkerLayer()
 
   addMarkers: (misspellings) ->
+    # Check for status listeners, if we have at least one, we pass
+    # the mispelling over to that first.
+    listeners = @spellCheckModule.statusListeners
+
+    for listener in listeners
+      listener.addMisspellings @editor, misspellings
+
+    # Only mark our own mispellings if we don't have a status listener
+    # or the user says to mark it anyways.
+    forceMarking = atom.config.get('spell-check.useMarkersWithStatusProviders')
+
+    if not forceMarking and listeners
+      return
+
     for misspelling in misspellings
       scope = @editor.scopeDescriptorForBufferPosition(misspelling[0])
       unless @scopeIsExcluded(scope)

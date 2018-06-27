@@ -6,6 +6,7 @@ spellCheckViews = {}
 module.exports =
   activate: ->
     @subs = new CompositeDisposable
+    @statusListeners = []
 
     # Since the spell-checking is done on another process, we gather up all the
     # arguments and pass them into the task. Whenever these change, we'll update
@@ -49,6 +50,8 @@ module.exports =
     @subs.add atom.config.onDidChange 'spell-check.addKnownWords', ({newValue, oldValue}) =>
       @globalArgs.addKnownWords = newValue
       manager.setGlobalArgs @globalArgs
+    @subs.add atom.config.onDidChange 'spell-check.useMarkersWithStatusProviders', ({newValue, oldValue}) =>
+      @updateViews()
 
     # Hook up the UI and processing.
     @subs.add atom.commands.add 'atom-workspace',
@@ -122,12 +125,14 @@ module.exports =
         @globalArgs.checkerPaths.push checkerPath
 
   # Registers any Atom packages that listen to our spell-check status.
-  consumeSpellCheckStatus: (statuses) ->
+  consumeSpellCheckStatus: (statusListeners) ->
     # Normalize it so we always have an array.
-    unless statuses instanceof Array
-      statuses = [ checkerPaths ]
+    unless statusListeners instanceof Array
+      statusListeners = [ statusListeners ]
 
-    console.log "Got status plugins" + checkerPaths.join(", ")
+    # Save it directly since we don't have to cross the process boundary
+    # for this one and all editors use the same list.
+    @statusListeners = statusListeners
 
   misspellingMarkersForEditor: (editor) ->
     @viewsByEditor.get(editor).markerLayer.getMarkers()

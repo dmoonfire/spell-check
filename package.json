@@ -94,6 +94,12 @@
           "description": "Display notices only on the console"
         }
       ]
+    },
+    "useMarkersWithStatusProviders": {
+      "type": "boolean",
+      "default": false,
+      "description": "If checked, then mispellings will not be marked by `spell-check` if there is another plugin that handles status. For example, if `spell-check-linter` is used, this should be false to avoid duplicate markers.",
+      "order": 79
     }
   },
   "devDependencies": {
