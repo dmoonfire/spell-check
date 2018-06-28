@@ -84,17 +84,40 @@ class SpellCheckView
 
   addMarkers: (misspellings) ->
     # Check for status listeners, if we have at least one, we pass
-    # the mispelling over to that first.
+    # the mispelling over to that first. We map it to a more full-featured
+    # collection for listeners to avoid looping back.
     listeners = @spellCheckModule.statusListeners
 
-    for listener in listeners
-      listener.addMisspellings @editor, misspellings
+    if listeners.length > 0
+      that = this
+      args = @getPluginArgs()
+      misspellingsWithSuggestions = misspellings.map (range) ->
+        # Get a list of corrections that converts everything into
+        # a self-contained callback with suggestions.
+        corrections = that.getCorrectionsForRange range
+        corrections = corrections.map (correction) ->
+          if not correction.isSuggestion
+            correction.callback = () -> correction.plugin.add args, correction
+          else
+            correction.callback = () ->
+              that.editor.setSelectedBufferRange(range)
+              that.editor.insertText(correction.suggestion)
+
+          return correction
+
+        {
+          range: range,
+          suggestions: corrections
+        }
+
+      for listener in listeners
+        listener.addMisspellings @editor, misspellingsWithSuggestions
 
     # Only mark our own mispellings if we don't have a status listener
     # or the user says to mark it anyways.
     forceMarking = atom.config.get('spell-check.useMarkersWithStatusProviders')
 
-    if not forceMarking and listeners
+    if not forceMarking and listeners.length > 0
       return
 
     for misspelling in misspellings
@@ -108,18 +131,28 @@ class SpellCheckView
       @addMarkers(misspellings) if @buffer?
 
   getCorrections: (marker) ->
+    range = marker.getBufferRange()
+    @getCorrectionsForRange range
+
+  getCorrectionsForRange: (range) ->
+    misspelling = @editor.getTextInBufferRange range
+    @getCorrectionsForMisspelling misspelling
+
+  getPluginArgs: ->
     # Build up the arguments object for this buffer and text.
     projectPath = null
     relativePath = null
     if @buffer?.file?.path
       [projectPath, relativePath] = atom.project.relativizePath(@buffer.file.path)
     args = {
+      id: @id
       projectPath: projectPath,
       relativePath: relativePath
     }
+    args
 
-    # Get the misspelled word and then request corrections.
-    misspelling = @editor.getTextInBufferRange marker.getBufferRange()
+  getCorrectionsForMisspelling: (misspelling) ->
+    args = @getPluginArgs()
     @manager.suggest args, misspelling
 
   addContextMenuEntries: (mouseEvent) =>
@@ -166,15 +199,7 @@ class SpellCheckView
       @editor.insertText(correction.suggestion)
     else
       # Build up the arguments object for this buffer and text.
-      projectPath = null
-      relativePath = null
-      if @editor.buffer?.file?.path
-        [projectPath, relativePath] = atom.project.relativizePath(@editor.buffer.file.path)
-      args = {
-        id: @id,
-        projectPath: projectPath,
-        relativePath: relativePath
-      }
+      args = @getPluginArgs()
 
       # Send the "add" request to the plugin.
       correction.plugin.add args, correction
